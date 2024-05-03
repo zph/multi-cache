@@ -1,0 +1,1 @@
+localstack: docker-compose up
