@@ -119,12 +119,13 @@ function builder(
           if (error.code !== 'ENOENT') throw error;
         }
       },
-      // TODO: improve speed with async and Promise.all
       async reset() {
         const files = Deno.readDir(directory);
+        const promises = []
         for await (const f of files) {
-          await Deno.remove(path.join(directory, f.name), { recursive: true })
+          promises.push(Deno.remove(path.join(directory, f.name), { recursive: true }))
         }
+        await Promise.all(promises)
       },
       async ttl(key) {
         key = this.fullKey(key)
@@ -141,14 +142,17 @@ function builder(
           throw error;
         }
       },
-      keys: async (pattern = '*') => {
+      async keys(pattern = '*') {
         const files = Deno.readDir(directory);
         const keys = [];
         let matchingFn
         if (pattern === '*') {
           matchingFn = () => true
         } else {
-          matchingFn = (key: string) => key.startsWith(pattern)
+          matchingFn = (key: string) => {
+            key = this.fullKey(key)
+            return key.startsWith(pattern)
+          }
         }
 
         for await (const f of files) {
@@ -165,7 +169,8 @@ function builder(
         return directory;
       },
       fullKey(key: string) {
-        return prefix + key;
+        if(key.startsWith(prefix)) return key
+        return [prefix, key].join('/');
       }
     },
     eventEmitter,

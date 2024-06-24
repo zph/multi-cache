@@ -39,6 +39,9 @@ function builder(
       try {
         const command = new GetObjectCommand({ Bucket: bucket, Key: key });
         const { Body } = await s3Client.send(command);
+        if(!Body) {
+          return undefined
+        }
         const val = await Body.transformToString()
         const [value, ttlTs] = deserialize(val);
         const now = Date.now();
@@ -92,8 +95,7 @@ function builder(
       const listCommand = new ListObjectsCommand({ Bucket: bucket });
       const { Contents } = await s3Client.send(listCommand);
       if (!Contents) return undefined;
-      const deletePromises = Contents.map(({ Key }) => Key && this.del(Key));
-      await Promise.all(deletePromises);
+      await Promise.all(Contents.map(({ Key }) => Key && this.del(Key)))
     },
 
     async ttl(key: string): Promise<number | undefined> {
@@ -101,6 +103,9 @@ function builder(
       try {
         const command = new GetObjectCommand({ Bucket: bucket, Key: key });
         const { Body } = await s3Client.send(command);
+        if(!Body) {
+          return undefined
+        }
         const val = await Body.transformToString();
         const [_value, ttlTs] = deserialize(val);
         const now = Date.now();
@@ -113,10 +118,8 @@ function builder(
         throw error;
       }
     },
-    // TODO: determine right default if any
-    // TODO: account for the options.prefix
     keys: async (pattern = "") => {
-      const listCommand = new ListObjectsCommand({ Bucket: bucket, Prefix: pattern });
+      const listCommand = new ListObjectsCommand({ Bucket: bucket, Prefix: [prefix, pattern].join('/') });
       const { Contents } = await s3Client.send(listCommand);
       if (!Contents) return [];
       return Contents.map(({ Key }) => Key);
@@ -130,7 +133,12 @@ function builder(
       return prefix;
     },
     fullKey(key: string) {
-      return prefix + key;
+      if(key.startsWith(prefix + '/')) {
+        // Already has prefix
+        return key
+      } else {
+        return [prefix, key].join('/');
+      }
     }
   },
   eventEmitter,

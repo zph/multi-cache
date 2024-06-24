@@ -33,6 +33,7 @@ const [s3, s3Events] = await s3StoreWithEvents({
 const createFileStore = async (directory: string, ttlMs: number) => {
   const [fstore, events] = await fileStoreWithEvents({
     directory,
+    prefix: '',
     ttl: ttlMs,
   })
   const fileCache = await caching(fstore)
@@ -211,7 +212,7 @@ Deno.test("fileStore and s3Store multiCache", async (t) => {
 
   // Cleanup
   await t.step("remove bucket", async () => {
-    await cache.reset()
+    console.log(await cache.reset())
     await deleteBucket(bucket)
       .catch((error) => console.error("Bucket deletion failed:", error));
   })
