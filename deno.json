@@ -5,6 +5,9 @@
     ".": "./src/mod.ts",
     "./kvctl": "./bin/kvctl.ts"
   },
+  "publish": {
+    "exclude": [".overmind.sock"]
+  },
   "tasks": {
     "dev": "deno run --watch main.ts"
   }
