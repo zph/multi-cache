@@ -184,7 +184,7 @@ type SetOptions = [
   unknown,
 ]
 
-export function fileStoreWithEvents(options?: Config & { directory: string, prefix: string }) {
+export function fileStoreWithEvents(options?: Config & { directory: string, prefix: string }): [FileStore, EventEmitter<string | symbol, any>] {
   const directory = options?.directory || Deno.cwd();
   const prefix = options?.prefix || 'cache';
   Deno.mkdirSync(directory, { recursive: true });
@@ -192,7 +192,7 @@ export function fileStoreWithEvents(options?: Config & { directory: string, pref
   return builder(directory, prefix, options);
 }
 
-export function fileStore(options?: Config & { directory: string, prefix: string }) {
+export function fileStore(options?: Config & { directory: string, prefix: string }): FileStore {
   const [fileStore, _] = fileStoreWithEvents(options);
   return fileStore
 }

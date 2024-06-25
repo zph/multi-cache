@@ -150,7 +150,7 @@ type SetOptions = [
   unknown,
 ]
 
-export function s3StoreWithEvents(options?: Config & { bucket: string, prefix: string, s3Client: S3Client }) {
+export function s3StoreWithEvents(options?: Config & { bucket: string, prefix: string, s3Client: S3Client }): [S3Store, EventEmitter<string | symbol, any>] {
   const bucket = options?.bucket || 'my-s3-bucket';
   const prefix = options?.prefix || 'cache';
   const s3Client = options?.s3Client || new S3Client({ region: 'us-east-1' });
@@ -158,7 +158,7 @@ export function s3StoreWithEvents(options?: Config & { bucket: string, prefix: s
   return builder(bucket, prefix, s3Client, options);
 }
 
-export function s3Store(options?: Config & { bucket: string, prefix: string, s3Client: S3Client }) {
+export function s3Store(options?: Config & { bucket: string, prefix: string, s3Client: S3Client }): S3Store {
   const [store, _] = s3StoreWithEvents(options);
   return store
 }
