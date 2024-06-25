@@ -39,9 +39,9 @@ function builder(
           try {
             const stat = await Deno.stat(filePath);
             if (stat.isFile) {
-              op(CacheEvent.HIT, { id, key });
+              op(CacheEvent.HIT, { id, key, extra: "file exists" });
             } else {
-              op(CacheEvent.MISS, { id, key });
+              op(CacheEvent.MISS, { id, key, extra: "file doesn't exist" });
             }
           } catch (e) {
             op(CacheEvent.MISS, { id, key, error: e.name });
@@ -70,6 +70,7 @@ function builder(
       },
       async set(key, value, ttl) {
         key = this.fullKey(key);
+        ttl = ttl || options?.ttl
         if (!isCacheable(value))
           throw new NoCacheableError(`"${value}" is not a cacheable value`);
         const filePath = path.join(directory, key);
@@ -169,6 +170,7 @@ function builder(
         return directory;
       },
       fullKey(key: string) {
+        if(prefix === '') return key
         if(key.startsWith(prefix)) return key
         return [prefix, key].join('/');
       }
@@ -183,8 +185,8 @@ type SetOptions = [
 ]
 
 export function fileStoreWithEvents(options?: Config & { directory: string, prefix: string }) {
-  const directory = options?.directory || './cache';
-  const prefix = options?.prefix || '';
+  const directory = options?.directory || Deno.cwd();
+  const prefix = options?.prefix || 'cache';
   Deno.mkdirSync(directory, { recursive: true });
 
   return builder(directory, prefix, options);

@@ -13,6 +13,7 @@ const fileCacheTTL = 10 * memoryCacheTTL;
 const [fstore, events] = await fileStoreWithEvents({
   directory: './.cache',
   ttl: fileCacheTTL,
+  prefix: '',
 })
 const fileCache = await caching(fstore)
 events.on('cache:op', (event) => console.log(event))

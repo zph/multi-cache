@@ -63,9 +63,9 @@ function builder(
     async mget<T>(...keys: string[]) {
       return await Promise.all(keys.map(key => this.get<T>(key)));
     },
-    // TODO: Should this ttl be pulled in from outer wrapper if unset?
-    async set(key, value, ttl = 0) {
+    async set(key, value, ttl?) {
       key = this.fullKey(key);
+      ttl = ttl || options?.ttl
       if (!isCacheable(value))
         throw new NoCacheableError(`"${value}" is not a cacheable value`);
       const now = Date.now();
@@ -133,12 +133,9 @@ function builder(
       return prefix;
     },
     fullKey(key: string) {
-      if(key.startsWith(prefix + '/')) {
-        // Already has prefix
-        return key
-      } else {
-        return [prefix, key].join('/');
-      }
+      if(prefix === '') return key
+      if(key.startsWith(prefix)) return key
+      return [prefix, key].join('/');
     }
   },
   eventEmitter,
