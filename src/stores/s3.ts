@@ -66,6 +66,9 @@ function builder(
     async set(key, value, ttl?) {
       key = this.fullKey(key);
       ttl = ttl || options?.ttl
+      if(ttl === undefined) {
+        ttl = 0
+      }
       if (!isCacheable(value))
         throw new NoCacheableError(`"${value}" is not a cacheable value`);
       const now = Date.now();
