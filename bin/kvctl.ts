@@ -95,12 +95,10 @@ if (import.meta.main) {
   }
 
   const dir = Deno.env.get("KVCTL_DIRECTORY")
-  console.log({dir})
   if (dir !== undefined) {
     args.directory = dir
   }
 
-  console.log({args})
   let { directory, action, command, key, debug, bucket, prefix } = args;
   const ttlMin = parseInt(args["ttl-minutes"])
   if (key === undefined && command === undefined && action === "get") {
