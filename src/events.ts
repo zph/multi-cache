@@ -1,5 +1,5 @@
-export {EventEmitter} from "npm:eventemitter3";
-import {EventEmitter} from "npm:eventemitter3";
+export {EventEmitter} from "npm:eventemitter3@5.0.1";
+import {EventEmitter} from "npm:eventemitter3@5.0.1";
 
 export enum CacheEvent {
   GET = 'get',

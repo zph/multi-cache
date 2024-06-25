@@ -1,8 +1,8 @@
-import * as path from "jsr:@std/path";
-import type { Cache, Store, Config } from 'npm:cache-manager';
+import * as path from "jsr:@std/path@1.0.0-rc.2";
+import type { Cache, Store, Config } from 'npm:cache-manager@5.6.1';
 import { jsonSerializer } from '../serializer.ts'
 const { serialize, deserialize } = jsonSerializer;
-import { ulid } from "https://deno.land/x/ulid@v0.3.0/mod.ts";
+import { ulid } from "jsr:@std/ulid@1.0.0-rc.2";
 import { CacheEvent, EventEmitter, buildOpFn } from "../events.ts";
 import { NoCacheableError } from "../util.ts";
 
