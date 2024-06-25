@@ -3,7 +3,7 @@
 import { parseArgs } from "jsr:@std/cli@0.224.6/parse-args"
 import { fileStoreWithEvents } from "../src/stores/file.ts";
 import { caching, multiCaching } from "npm:cache-manager@5.6.1";
-import { s3Store } from "../src/stores/s3.ts";
+import { s3Store, s3StoreWithEvents } from "../src/stores/s3.ts";
 import { S3Client } from "npm:@aws-sdk/client-s3@3.600.0";
 import { $ } from "jsr:@david/dax@0.41.0"
 
@@ -19,7 +19,7 @@ const buildCache = async ({ directory, fileCacheTTL, s3CacheTTL, debug, bucket, 
   const [fstore, events] = await fileStoreWithEvents({
     directory: directory,
     ttl: fileCacheTTL,
-    prefix: '',
+    prefix: prefix,
   })
   const fileCache = await caching(fstore)
   if (debug) {
@@ -28,7 +28,8 @@ const buildCache = async ({ directory, fileCacheTTL, s3CacheTTL, debug, bucket, 
 
   let caches: any[] = [fileCache]
   if (bucket !== "") {
-    const s3 = await s3Store({
+    s3StoreWithEvents
+    const [s3, s3events] = await s3StoreWithEvents({
       bucket: bucket,
       prefix: prefix,
       s3Client: new S3Client({
@@ -41,10 +42,16 @@ const buildCache = async ({ directory, fileCacheTTL, s3CacheTTL, debug, bucket, 
       onBackgroundRefreshError: (error) => console.log(`Background refresh error: `, error),
     })
 
+    if (debug) {
+      s3events.on('cache:op', (event) => console.error(event))
+    }
     const s3Cache = await caching(s3)
     caches.push(s3Cache)
   }
 
+  if(debug) {
+    console.log({caches})
+  }
   return multiCaching(caches);
 }
 
