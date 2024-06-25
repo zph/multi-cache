@@ -48,7 +48,7 @@ const buildCache = async ({ directory, fileCacheTTL, s3CacheTTL, debug, bucket, 
   return multiCaching(caches);
 }
 
-export const main = async ({ directory, action, key, commandFn, debug, bucket, prefix, ttlMin }: { directory: string, action: Action, key: string, commandFn: TCommandFn, debug: boolean, bucket: string, prefix: string, ttlMin: number }) => {
+export const kvctl = async ({ directory, action, key, commandFn, debug, bucket, prefix, ttlMin }: { directory: string, action: Action, key: string, commandFn: TCommandFn, debug: boolean, bucket: string, prefix: string, ttlMin: number }) => {
   const fileCacheTTL = ttlMin * 60 * 1000
   const cache = await buildCache({ directory, fileCacheTTL, s3CacheTTL: fileCacheTTL * 24, debug, bucket, prefix })
   switch (action) {
@@ -129,7 +129,7 @@ if (import.meta.main) {
   }
 
 
-  await main({ directory, action: actionTyped, key, commandFn, debug, bucket, prefix, ttlMin })
+  await kvctl({ directory, action: actionTyped, key, commandFn, debug, bucket, prefix, ttlMin })
 }
 
 type TCommandFn = (() => Promise<string>)
