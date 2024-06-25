@@ -12,7 +12,7 @@ export enum CacheEvent {
 
 export const OP = 'cache:op'
 
-export const buildOpFn = (emitter: EventEmitter, store: string) => {
+export const buildOpFn = (emitter: EventEmitter, store: string): (action: CacheEvent, args?: {}) => void => {
   return (action: CacheEvent, args = {}) => {
     emitter.emit(OP, { action, store: store, __now__: new Date(), ...args });
   };
