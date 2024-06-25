@@ -3,7 +3,7 @@
 import { parseArgs } from "jsr:@std/cli@0.224.6/parse-args"
 import { fileStoreWithEvents } from "../src/stores/file.ts";
 import { caching, multiCaching } from "npm:cache-manager@5.6.1";
-import { s3Store, s3StoreWithEvents } from "../src/stores/s3.ts";
+import { s3StoreWithEvents } from "../src/stores/s3.ts";
 import { S3Client } from "npm:@aws-sdk/client-s3@3.600.0";
 import { $ } from "jsr:@david/dax@0.41.0"
 
