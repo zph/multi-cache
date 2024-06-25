@@ -1,7 +1,10 @@
 {
   "name": "@zph/multi-cache",
   "version": "0.1.0",
-  "exports": "./src/mod.ts",
+  "exports": {
+    ".": "./src/mod.ts",
+    "kvctl": "./bin/kvctl"
+  },
   "tasks": {
     "dev": "deno run --watch main.ts"
   }
