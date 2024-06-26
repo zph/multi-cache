@@ -15,6 +15,12 @@ enum Action {
   Ttl = "ttl",
 }
 
+enum Parser {
+  Json = "json",
+  Text = "text",
+}
+
+
 const buildCache = async ({ directory, fileCacheTTL, s3CacheTTL, debug, bucket, prefix }: { directory: string, fileCacheTTL: number, s3CacheTTL: number, debug: boolean, bucket: string, prefix: string }) => {
   const [fstore, events] = await fileStoreWithEvents({
     directory: directory,
@@ -80,7 +86,7 @@ export const kvctl = async ({ directory, action, key, commandFn, debug, bucket, 
 
 if (import.meta.main) {
   const args = parseArgs(Deno.args, {
-    string: ["directory", "command", "action", "key", "ttl-minutes", "bucket", "prefix"],
+    string: ["directory", "command", "action", "key", "ttl-minutes", "bucket", "prefix", "parse"],
     boolean: ["debug"],
     default: {
       directory: [Deno.env.get("HOME"), ".local/cache/multi-cache"].join('/'),
@@ -91,6 +97,7 @@ if (import.meta.main) {
       bucket: "",
       prefix: "cache",
       "ttl-minutes": "60",
+      parse: "text",
     }
   })
 
@@ -106,7 +113,7 @@ if (import.meta.main) {
     args.directory = dir
   }
 
-  let { directory, action, command, key, debug, bucket, prefix } = args;
+  let { directory, action, command, key, debug, bucket, prefix, parse } = args;
   const ttlMin = parseInt(args["ttl-minutes"])
   if (key === undefined && command === undefined && action === "get") {
     // Assume positional args
@@ -124,13 +131,14 @@ if (import.meta.main) {
     throw new Error(`Must supply a key`)
   }
 
+  const parser = parse as Parser;
   let commandFn: TCommandFn
   if (command?.startsWith("http")) {
-    commandFn = () => $.request(command).text()
+    commandFn = () => $.request(command)[parser]()
   } else if (command === undefined || command === "") {
     throw new Error(`No command supplied`)
   } else {
-    commandFn = () => $.raw`${command}`.text()
+    commandFn = () => $.raw`${command}`[parser]()
   }
 
 
