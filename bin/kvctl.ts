@@ -7,7 +7,7 @@ import { s3StoreWithEvents } from "../src/stores/s3.ts";
 import { S3Client } from "npm:@aws-sdk/client-s3@3.600.0";
 import { $ } from "jsr:@david/dax@0.41.0"
 
-enum Action {
+export enum Action {
   Get = "get",
   GetOrUpdate = "get-or-update",
   Reset = "reset",
@@ -16,7 +16,7 @@ enum Action {
   Ttl = "ttl",
 }
 
-enum Parser {
+export enum Parser {
   Json = "json",
   Text = "text",
 }
@@ -62,30 +62,22 @@ const buildCache = async ({ directory, fileCacheTTL, s3CacheTTL, debug, bucket, 
   return multiCaching(caches);
 }
 
-export const kvctl = async ({ directory, action, key, commandFn, debug, bucket, prefix, ttlMin }: { directory: string, action: Action, key: string, commandFn: TCommandFn, debug: boolean, bucket: string, prefix: string, ttlMin: number }): Promise<void> => {
+export const kvctl = async ({ directory, action, key, commandFn, debug, bucket, prefix, ttlMin }: { directory: string, action: Action, key: string, commandFn: TCommandFn, debug: boolean, bucket: string, prefix: string, ttlMin: number }): Promise<string | void> => {
   const fileCacheTTL = ttlMin * 60 * 1000
   const cache = await buildCache({ directory, fileCacheTTL, s3CacheTTL: fileCacheTTL * 24, debug, bucket, prefix })
-  const printer = (arg) => console.log(
-    JSON.stringify(arg, null, 2)
-  )
   switch (action) {
     case Action.Get:
-      {
-        printer(await cache.get(key))
-        break;
-      }
+        return await cache.get(key)
     case Action.GetOrUpdate:
       if(!commandFn) { throw new Error(`Impossible to reach here but making type happy`) }
 
-      printer(await cache.wrap(key, commandFn, fileCacheTTL, fileCacheTTL / 4))
-      break;
+      return await cache.wrap(key, commandFn, fileCacheTTL, fileCacheTTL / 4)
     case Action.Set:
       {
         if(!commandFn) { throw new Error(`Impossible to reach here but making type happy`) }
         const result = await commandFn()
         await cache.set(key, result, fileCacheTTL)
-        printer(result)
-        break;
+        return result
       }
     case Action.Delete:
       {
@@ -96,8 +88,7 @@ export const kvctl = async ({ directory, action, key, commandFn, debug, bucket, 
       }
       break;
     case Action.Reset:
-      console.log(await cache.reset())
-      break;
+      return await cache.reset()
     default:
       break;
   }
@@ -177,7 +168,12 @@ if (import.meta.main) {
   }
 
 
-  await kvctl({ directory, action: actionTyped, key, commandFn, debug, bucket, prefix, ttlMin })
+  const out = await kvctl({ directory, action: actionTyped, key, commandFn, debug, bucket, prefix, ttlMin })
+
+  const printer = (arg: any) => console.log(
+    JSON.stringify(arg, null, 2)
+  )
+  printer(out)
 }
 
 type TCommandFn = (() => Promise<string>) | undefined
