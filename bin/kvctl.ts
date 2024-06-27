@@ -68,6 +68,13 @@ export const kvctl = async ({ directory, action, key, commandFn, debug, bucket, 
     case Action.Get:
       console.log(await cache.wrap(key, commandFn, fileCacheTTL, fileCacheTTL / 4))
       break;
+    case Action.Set:
+      {
+        const result = await commandFn()
+        await cache.set(key, result, fileCacheTTL)
+        console.log(result)
+        break;
+      }
     case Action.Delete:
       {
         const result = await cache.del(key)
