@@ -9,6 +9,7 @@ import { $ } from "jsr:@david/dax@0.41.0"
 
 enum Action {
   Get = "get",
+  GetOrUpdate = "get-or-update",
   Reset = "reset",
   Delete = "delete",
   Set = "set",
@@ -66,10 +67,18 @@ export const kvctl = async ({ directory, action, key, commandFn, debug, bucket, 
   const cache = await buildCache({ directory, fileCacheTTL, s3CacheTTL: fileCacheTTL * 24, debug, bucket, prefix })
   switch (action) {
     case Action.Get:
+      {
+        console.log(await cache.get(key))
+        break;
+      }
+    case Action.GetOrUpdate:
+      if(!commandFn) { throw new Error(`Impossible to reach here but making type happy`) }
+
       console.log(await cache.wrap(key, commandFn, fileCacheTTL, fileCacheTTL / 4))
       break;
     case Action.Set:
       {
+        if(!commandFn) { throw new Error(`Impossible to reach here but making type happy`) }
         const result = await commandFn()
         await cache.set(key, result, fileCacheTTL)
         console.log(result)
@@ -140,30 +149,33 @@ if (import.meta.main) {
 
   const parser = parse as Parser;
   let commandFn: TCommandFn
-  if (command?.startsWith("http")) {
-    commandFn = () => $.request(command)[parser]()
-  } else if (command === undefined || command === "") {
-    throw new Error(`No command supplied`)
-  } else {
-    commandFn = async () => {
-      const output = await $.raw`${command}`.noThrow(true).stderr("piped").stdout("piped")
-      if(output.code != 0) {
-        console.error(`Error`, output.stderr)
-        Deno.exit(output.code)
-      }
+  if([Action.GetOrUpdate, Action.Set].includes(actionTyped)) {
+    if (command?.startsWith("http")) {
+      commandFn = () => $.request(command)[parser]()
+    } else if (command === undefined || command === "") {
+      throw new Error(`Impossible. No --command supplied and also requesting to set a new value`)
+    } else {
+      commandFn = async () => {
+        const output = await $.raw`${command}`.noThrow(true).stderr("piped").stdout("piped")
+        if(output.code != 0) {
+          console.error(`Error`, output.stderr)
+          Deno.exit(output.code)
+        }
 
-      switch(parser) {
-        case Parser.Json:
-          return output.stdoutJson
-        default:
-          return output.stdout
+        switch(parser) {
+          case Parser.Json:
+            return output.stdoutJson
+          default:
+            return output.stdout
+        }
       }
     }
+
   }
 
 
   await kvctl({ directory, action: actionTyped, key, commandFn, debug, bucket, prefix, ttlMin })
 }
 
-type TCommandFn = (() => Promise<string>)
+type TCommandFn = (() => Promise<string>) | undefined
 
