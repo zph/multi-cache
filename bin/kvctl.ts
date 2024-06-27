@@ -65,23 +65,26 @@ const buildCache = async ({ directory, fileCacheTTL, s3CacheTTL, debug, bucket, 
 export const kvctl = async ({ directory, action, key, commandFn, debug, bucket, prefix, ttlMin }: { directory: string, action: Action, key: string, commandFn: TCommandFn, debug: boolean, bucket: string, prefix: string, ttlMin: number }): Promise<void> => {
   const fileCacheTTL = ttlMin * 60 * 1000
   const cache = await buildCache({ directory, fileCacheTTL, s3CacheTTL: fileCacheTTL * 24, debug, bucket, prefix })
+  const printer = (arg) => console.log(
+    JSON.stringify(arg, null, 2)
+  )
   switch (action) {
     case Action.Get:
       {
-        console.log(await cache.get(key))
+        printer(await cache.get(key))
         break;
       }
     case Action.GetOrUpdate:
       if(!commandFn) { throw new Error(`Impossible to reach here but making type happy`) }
 
-      console.log(await cache.wrap(key, commandFn, fileCacheTTL, fileCacheTTL / 4))
+      printer(await cache.wrap(key, commandFn, fileCacheTTL, fileCacheTTL / 4))
       break;
     case Action.Set:
       {
         if(!commandFn) { throw new Error(`Impossible to reach here but making type happy`) }
         const result = await commandFn()
         await cache.set(key, result, fileCacheTTL)
-        console.log(result)
+        printer(result)
         break;
       }
     case Action.Delete:
