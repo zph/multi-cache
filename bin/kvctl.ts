@@ -138,7 +138,20 @@ if (import.meta.main) {
   } else if (command === undefined || command === "") {
     throw new Error(`No command supplied`)
   } else {
-    commandFn = () => $.raw`${command}`[parser]()
+    commandFn = async () => {
+      const output = await $.raw`${command}`.noThrow(true).stderr("piped").stdout("piped")
+      if(output.code != 0) {
+        console.error(`Error`, output.stderr)
+        Deno.exit(output.code)
+      }
+
+      switch(parser) {
+        case Parser.Json:
+          return output.stdoutJson
+        default:
+          return output.stdout
+      }
+    }
   }
 
 
